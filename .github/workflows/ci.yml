@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  push:
+    branches: [main, copilot/**]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────
+  # Unit Tests
+  # ─────────────────────────────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Supabase Integration Tests
+  # ─────────────────────────────────────────────────────────────────────
+  integration-tests:
+    name: Supabase Integration Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # Only run if the secrets are available (skipped on forks)
+    if: ${{ vars.EXPO_PUBLIC_SUPABASE_URL != '' || secrets.EXPO_PUBLIC_SUPABASE_URL != '' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Run Supabase integration tests
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}
+        run: npm run test:integration
+
+  # ─────────────────────────────────────────────────────────────────────
+  # E2E Browser Tests (Puppeteer)
+  # ─────────────────────────────────────────────────────────────────────
+  e2e-tests:
+    name: E2E Browser Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser
+
+      - name: Install Node dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build web app
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          EXPO_PUBLIC_SUPABASE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_KEY || 'placeholder-key' }}
+          CI: '1'
+          EXPO_NO_TELEMETRY: '1'
+        run: npx expo export --platform web --output-dir dist
+
+      - name: Start static server
+        run: |
+          npx serve dist -l 8081 &
+          SERVER_PID=$!
+          echo "Server PID: $SERVER_PID"
+          # Wait for server to be ready, fail if server process dies
+          for i in $(seq 1 30); do
+            if ! kill -0 $SERVER_PID 2>/dev/null; then
+              echo "Server process died unexpectedly"; exit 1
+            fi
+            if curl -sf http://127.0.0.1:8081 > /dev/null; then
+              echo "Server ready"; exit 0
+            fi
+            sleep 1
+          done
+          echo "Server did not start within 30 seconds"; exit 1
+
+      - name: Run E2E tests
+        env:
+          BASE_URL: http://127.0.0.1:8081
+          CHROME_PATH: /usr/bin/chromium-browser
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}
+        run: npm run test:e2e

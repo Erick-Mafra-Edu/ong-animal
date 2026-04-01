@@ -30,5 +30,5 @@ module.exports = {
       EXPO_PUBLIC_SUPABASE_KEY: process.env.EXPO_PUBLIC_SUPABASE_KEY || 'test-key',
     },
   },
-  testPathIgnorePatterns: ['/node_modules/', '/__tests__/e2e/'],
+  testPathIgnorePatterns: ['/node_modules/', '/__tests__/e2e/', '/__tests__/integration/'],
 };
