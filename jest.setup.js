@@ -16,47 +16,69 @@ if (typeof globalThis.TextEncoderStream === 'undefined') {
 }
 
 // Mock do react-native
-jest.mock('react-native', () => ({
-  View: ({ children, ...props }: any) => (
-    <div {...props} role="generic">
-      {children}
-    </div>
-  ),
-  Text: ({ children, ...props }: any) => (
-    <span {...props} role="textbox">
-      {children}
-    </span>
-  ),
-  Pressable: ({ children, onPress, ...props }: any) => (
-    <button {...props} onClick={onPress} role="button">
-      {children}
-    </button>
-  ),
-  Image: ({ source, ...props }: any) => (
-    <img {...props} src={source?.uri} alt="image" />
-  ),
-  ScrollView: ({ children, ...props }: any) => (
-    <div {...props} role="generic">
-      {children}
-    </div>
-  ),
-  TextInput: ({ ...props }: any) => (
-    <input {...props} />
-  ),
-  TouchableOpacity: ({ children, onPress, ...props }: any) => (
-    <button {...props} onClick={onPress} role="button">
-      {children}
-    </button>
-  ),
-  ActivityIndicator: () => <div role="progressbar" />,
-  Platform: {
-    OS: 'web',
-    select: (obj: any) => obj.web || obj.default,
-  },
-  StyleSheet: {
-    create: (styles: any) => styles,
-  },
-}));
+jest.mock('react-native', () => {
+  const toDataTestId = (props: any) => {
+    const result = { ...props };
+    if (result.testID) {
+      result['data-testid'] = result.testID;
+      delete result.testID;
+    }
+    return result;
+  };
+
+  return {
+    View: ({ children, testID, ...props }: any) => (
+      <div {...toDataTestId({ testID, ...props })} role="generic">
+        {children}
+      </div>
+    ),
+    Text: ({ children, testID, ...props }: any) => (
+      <span {...toDataTestId({ testID, ...props })} role="textbox">
+        {children}
+      </span>
+    ),
+    Pressable: ({ children, onPress, testID, ...props }: any) => (
+      <button {...toDataTestId({ testID, ...props })} onClick={onPress} role="button">
+        {children}
+      </button>
+    ),
+    Image: ({ source, testID, ...props }: any) => (
+      <img {...toDataTestId({ testID, ...props })} src={source?.uri} alt="image" />
+    ),
+    ScrollView: ({ children, testID, ...props }: any) => (
+      <div {...toDataTestId({ testID, ...props })} role="generic">
+        {children}
+      </div>
+    ),
+    TextInput: ({ testID, ...props }: any) => (
+      <input {...toDataTestId({ testID, ...props })} />
+    ),
+    TouchableOpacity: ({ children, onPress, testID, ...props }: any) => (
+      <button {...toDataTestId({ testID, ...props })} onClick={onPress} role="button">
+        {children}
+      </button>
+    ),
+    ActivityIndicator: ({ testID }: any) => (
+      <div data-testid={testID} role="progressbar" />
+    ),
+    FlatList: ({ data, renderItem, keyExtractor, testID, ...props }: any) => (
+      <div {...toDataTestId({ testID, ...props })} role="list">
+        {(data ?? []).map((item: any, index: number) =>
+          renderItem({ item, index })
+        )}
+      </div>
+    ),
+    Modal: ({ children, visible, testID }: any) =>
+      visible ? <div data-testid={testID}>{children}</div> : null,
+    Platform: {
+      OS: 'web',
+      select: (obj: any) => obj.web ?? obj.default,
+    },
+    StyleSheet: {
+      create: (styles: any) => styles,
+    },
+  };
+});
 
 // Mock do react-native-safe-area-context
 jest.mock('react-native-safe-area-context', () => ({
