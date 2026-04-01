@@ -1,22 +1,31 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import Home from '../../app/index';
+import { ThemeProvider } from '../../src/context/ThemeContext';
 
-// Mock do componente DarkTheme
-jest.mock('../../src/app/screens/DarkTheme', () => {
-  return function DefaultMock() {
-    return <div>Mocked Dark Theme</div>;
-  };
-});
+jest.mock('../../src/components/AnimalCard', () => ({
+  __esModule: true,
+  AnimalCard: function MockAnimalCard() {
+    return <div data-testid="animal-card">Animal Card</div>;
+  },
+}));
 
 describe('Home Route (index)', () => {
-  it('renders without crashing', () => {
-    const { getByText } = render(<Home />);
-    expect(getByText('Mocked Dark Theme')).toBeInTheDocument();
+  it('renders tinder card screen', () => {
+    const { getByTestId } = render(
+      <ThemeProvider>
+        <Home />
+      </ThemeProvider>
+    );
+    expect(getByTestId('animal-card')).toBeInTheDocument();
   });
 
-  it('renders a View component as container', () => {
-    const { container } = render(<Home />);
-    expect(container.firstChild).toBeTruthy();
+  it('renders animal card section', () => {
+    const { getByTestId } = render(
+      <ThemeProvider>
+        <Home />
+      </ThemeProvider>
+    );
+    expect(getByTestId('animal-card')).toBeInTheDocument();
   });
 });

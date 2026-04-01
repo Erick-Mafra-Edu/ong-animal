@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { AnimalCard } from '../../src/app/components/AnimalCard';
+import { AnimalCard } from '../../src/components/AnimalCard';
 
 describe('AnimalCard Component', () => {
   const mockProps = {

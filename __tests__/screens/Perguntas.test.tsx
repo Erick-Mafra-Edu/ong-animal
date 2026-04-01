@@ -1,9 +1,13 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
+
+const mockReplace = jest.fn();
+const mockUpsert = jest.fn();
+const mockGetUser = jest.fn();
 
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(() => ({
-    replace: jest.fn(),
+    replace: mockReplace,
     push: jest.fn(),
     back: jest.fn(),
   })),
@@ -12,10 +16,10 @@ jest.mock('expo-router', () => ({
 jest.mock('../../services/supabase', () => ({
   supabase: {
     auth: {
-      getUser: jest.fn(() => Promise.resolve({ data: { user: { id: 'test-user' } } })),
+      getUser: (...args: unknown[]) => mockGetUser(...args),
     },
     from: jest.fn(() => ({
-      upsert: jest.fn(() => Promise.resolve({ error: null })),
+      upsert: (...args: unknown[]) => mockUpsert(...args),
     })),
   },
 }));
@@ -23,6 +27,12 @@ jest.mock('../../services/supabase', () => ({
 import Perguntas from '../../app/(onboarding)/perguntas';
 
 describe('Perguntas (Onboarding) Screen', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'test-user' } } });
+    mockUpsert.mockResolvedValue({ error: null });
+  });
+
   it('renders the first question', () => {
     const { getByTestId } = render(<Perguntas />);
     expect(getByTestId('pergunta-titulo')).toBeTruthy();
@@ -51,5 +61,41 @@ describe('Perguntas (Onboarding) Screen', () => {
     // Button should become enabled (no disabled attribute)
     const btn = getByTestId('avancar-button');
     expect(btn).toBeTruthy();
+  });
+
+  it('completes onboarding and saves preferences', async () => {
+    const { getByTestId } = render(<Perguntas />);
+
+    const respostasPorEtapa = [
+      'casa',
+      'true',
+      'moderado',
+      'medio',
+      'sim',
+      'cachorro',
+      'medio',
+      'adulto',
+    ];
+
+    respostasPorEtapa.forEach((valor) => {
+      fireEvent.click(getByTestId(`opcao-${valor}`));
+      fireEvent.click(getByTestId('avancar-button'));
+    });
+
+    await waitFor(() => {
+      expect(mockGetUser).toHaveBeenCalled();
+      expect(mockUpsert).toHaveBeenCalledWith({
+        user_id: 'test-user',
+        tipo_moradia: 'casa',
+        tem_criancas: true,
+        tempo_para_brincar: 'moderado',
+        nivel_atividade: 'medio',
+        experiencia_animais: 'sim',
+        prefere_tipo: 'cachorro',
+        prefere_porte: 'medio',
+        prefere_idade: 'adulto',
+      });
+      expect(mockReplace).toHaveBeenCalledWith('/(tabs)/swipe');
+    });
   });
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
-import { SwipeButtons } from '../../src/app/components/SwipeButtons';
+import { SwipeButtons } from '../../src/components/SwipeButtons';
 
 describe('SwipeButtons Component', () => {
   const mockOnReject = jest.fn();

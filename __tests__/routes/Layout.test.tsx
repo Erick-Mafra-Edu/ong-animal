@@ -35,14 +35,14 @@ describe('Root Layout Routes', () => {
     expect(getByTestId('route-index')).toBeTruthy();
   });
 
-  it('defines light route', () => {
+  it('defines auth route group', () => {
     const { getByTestId } = render(<RootLayout />);
-    expect(getByTestId('route-light')).toBeTruthy();
+    expect(getByTestId('route-(auth)')).toBeTruthy();
   });
 
   it('has correct number of routes', () => {
     const { container } = render(<RootLayout />);
     const routes = container.querySelectorAll('[data-testid^="route-"]');
-    expect(routes.length).toBeGreaterThanOrEqual(2);
+    expect(routes.length).toBeGreaterThanOrEqual(5);
   });
 });

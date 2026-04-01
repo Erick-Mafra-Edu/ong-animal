@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  presets: [require('nativewind/preset')],
   content: [
     './index.html',
     './app/**/*.{js,ts,jsx,tsx}',
@@ -17,5 +18,4 @@ export default {
       },
     },
   },
-  plugins: [require('nativewind/tailwind/css')],
 }

@@ -50,8 +50,19 @@ jest.mock('react-native', () => {
         {children}
       </div>
     ),
-    TextInput: ({ testID, ...props }: any) => (
-      <input {...toDataTestId({ testID, ...props })} />
+    TextInput: ({
+      testID,
+      onChangeText,
+      placeholderTextColor,
+      keyboardType,
+      secureTextEntry,
+      autoCapitalize,
+      ...props
+    }: any) => (
+      <input
+        {...toDataTestId({ testID, ...props })}
+        onChange={(event: any) => onChangeText?.(event.target.value)}
+      />
     ),
     TouchableOpacity: ({ children, onPress, testID, ...props }: any) => (
       <button {...toDataTestId({ testID, ...props })} onClick={onPress} role="button">
@@ -74,6 +85,7 @@ jest.mock('react-native', () => {
       OS: 'web',
       select: (obj: any) => obj.web ?? obj.default,
     },
+    useColorScheme: () => 'dark',
     StyleSheet: {
       create: (styles: any) => styles,
     },
@@ -96,8 +108,8 @@ jest.mock('react-native-svg', () => ({
 
 // Mock do lucide-react-native
 jest.mock('lucide-react-native', () => {
-  const MockIcon = ({ testID, ...props }: any) => (
-    <span data-testid={testID} role="img" {...props} />
+  const MockIcon = ({ testID }: any) => (
+    <span data-testid={testID} role="img" />
   );
   return new Proxy(
     {},

@@ -1,8 +1,8 @@
 import { View, Text, Image, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useEffect, useState } from 'react';
 import { supabase, Animal } from '../../services/supabase';
-import { SwipeButtons } from '../../src/app/components/SwipeButtons';
-import { MatchModal } from '../../src/app/components/MatchModal';
+import { SwipeButtons } from '../../src/components/SwipeButtons';
+import { MatchModal } from '../../src/components/MatchModal';
 import { ImageOff } from 'lucide-react-native';
 
 export default function Swipe() {

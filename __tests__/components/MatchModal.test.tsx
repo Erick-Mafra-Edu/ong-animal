@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
-import { MatchModal } from '../../src/app/components/MatchModal';
+import { MatchModal } from '../../src/components/MatchModal';
 
 describe('MatchModal Component', () => {
   const mockOnClose = jest.fn();
