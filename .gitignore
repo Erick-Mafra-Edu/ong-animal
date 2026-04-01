@@ -1,3 +1,16 @@
+# Expo
+.expo/
+.expo-shared/
+dist/
+npm-debug*.js
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
 # dependencies
 node_modules/
 /.pnp
@@ -5,10 +18,6 @@ node_modules/
 
 # testing
 /coverage
-
-# production
-/dist
-/build
 
 # misc
 .DS_Store
@@ -28,6 +37,8 @@ lerna-debug.log*
 .idea
 *.swp
 *.swo
+*.sublime-workspace
 
 # OS
 thumbs.db
+

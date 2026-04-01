@@ -1,4 +1,5 @@
-import { Heart, X, Star } from 'lucide-react';
+import { View, Text, Image, ScrollView, Pressable } from 'react-native';
+import { Heart, X, ThumbsUp } from 'lucide-react-native';
 
 interface AnimalCardProps {
   name: string;
@@ -10,77 +11,79 @@ interface AnimalCardProps {
 
 export function AnimalCard({ name, age, image, tags, isDarkTheme = false }: AnimalCardProps) {
   return (
-    <div className={`flex gap-8 p-8 rounded-lg ${isDarkTheme ? 'bg-gray-800' : 'bg-white'}`}>
-      {/* Image Section - Left */}
-      <div className="flex-shrink-0 w-96">
-        <div className="rounded-lg overflow-hidden h-96 shadow-lg">
-          <img
-            src={image}
-            alt={name}
-            className="w-full h-full object-cover"
+    <View className={`flex-1 ${isDarkTheme ? 'bg-gray-900' : 'bg-white'}`}>
+      <ScrollView className="flex-1 px-4 py-8">
+        {/* Image Section */}
+        <View className="rounded-2xl overflow-hidden mb-6 h-80 shadow-lg">
+          <Image
+            source={{ uri: image }}
+            className="w-full h-full"
+            resizeMode="cover"
           />
-        </div>
-        {/* Status indicators */}
-        <div className="flex gap-2 mt-4 justify-center">
-          <div className={`w-3 h-3 rounded-full ${isDarkTheme ? 'bg-white' : 'bg-gray-700'}`} />
-          <div className={`w-3 h-3 rounded-full ${isDarkTheme ? 'bg-gray-600' : 'bg-gray-400'}`} />
-          <div className={`w-3 h-3 rounded-full ${isDarkTheme ? 'bg-gray-600' : 'bg-gray-400'}`} />
-        </div>
-      </div>
+        </View>
 
-      {/* Details Section - Right */}
-      <div className="flex-1 flex flex-col justify-between">
-        {/* Top section with name and age */}
-        <div>
-          <div className="flex items-baseline gap-3 mb-6">
-            <h1 className={`text-4xl font-bold ${isDarkTheme ? 'text-white' : 'text-gray-900'}`}>
-              {name}
-            </h1>
-            <span className={`text-2xl font-medium ${isDarkTheme ? 'text-gray-400' : 'text-gray-600'}`}>
-              {age}
-            </span>
-          </div>
+        {/* Name and Age */}
+        <View className="flex-row items-baseline gap-3 mb-6">
+          <Text className={`text-4xl font-bold ${isDarkTheme ? 'text-white' : 'text-gray-900'}`}>
+            {name}
+          </Text>
+          <Text className={`text-2xl ${isDarkTheme ? 'text-gray-400' : 'text-gray-600'}`}>
+            {age}
+          </Text>
+        </View>
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-3 mb-8">
-            {tags.map((tag, index) => (
-              <span
-                key={index}
-                className={`px-4 py-2 rounded-full text-sm font-medium border ${
-                  isDarkTheme
-                    ? 'bg-gray-700/50 border-gray-600 text-gray-200'
-                    : 'bg-gray-50 border-gray-300 text-gray-700'
+        {/* Tags */}
+        <View className="flex-row flex-wrap gap-2 mb-6">
+          {tags.map((tag, index) => (
+            <View
+              key={index}
+              className={`px-4 py-2 rounded-full border ${
+                isDarkTheme
+                  ? 'bg-gray-700/50 border-gray-600'
+                  : 'bg-gray-50 border-gray-300'
+              }`}
+            >
+              <Text
+                className={`text-sm font-medium ${
+                  isDarkTheme ? 'text-gray-200' : 'text-gray-700'
                 }`}
               >
                 {tag}
-              </span>
-            ))}
-          </div>
+              </Text>
+            </View>
+          ))}
+        </View>
 
-          {/* Description */}
-          <p className={`text-lg leading-relaxed ${isDarkTheme ? 'text-gray-300' : 'text-gray-600'}`}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-          </p>
-        </div>
+        {/* Description */}
+        <Text
+          className={`text-base leading-relaxed mb-8 ${
+            isDarkTheme ? 'text-gray-300' : 'text-gray-600'
+          }`}
+        >
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        </Text>
+      </ScrollView>
 
-        {/* Action buttons */}
-        <div className="flex gap-4 mt-8">
-          {/* Like button */}
-          <button className="flex-1 flex items-center justify-center gap-2 py-3 px-6 rounded-full border-2 border-orange-500 bg-transparent hover:bg-orange-50 transition-colors">
-            <span className="text-xl font-semibold text-orange-600">R</span>
-          </button>
+      {/* Action Buttons */}
+      <View className="flex-row gap-4 px-4 py-6 border-t border-gray-200">
+        {/* Reject Button */}
+        <Pressable className="flex-1 flex-row items-center justify-center py-3 px-6 rounded-full border-2 border-red-500 bg-transparent">
+          <X className="w-6 h-6 text-red-500 mr-2" />
+          <Text className="text-red-500 font-semibold">Passar</Text>
+        </Pressable>
 
-          {/* Dislike button */}
-          <button className="flex-1 flex items-center justify-center gap-2 py-3 px-6 rounded-full border-2 border-red-500 bg-transparent hover:bg-red-50 transition-colors">
-            <X className="w-6 h-6 text-red-500" />
-          </button>
+        {/* Like Button */}
+        <Pressable className="flex-1 flex-row items-center justify-center py-3 px-6 rounded-full border-2 border-orange-500 bg-transparent">
+          <Text className="text-orange-600 font-semibold mr-2">R</Text>
+          <Heart className="w-6 h-6 text-orange-500" />
+        </Pressable>
 
-          {/* Super like button */}
-          <button className="flex-1 flex items-center justify-center gap-2 py-3 px-6 rounded-full border-2 border-green-600 bg-transparent hover:bg-green-50 transition-colors">
-            <span className="text-xl font-semibold text-green-600">L</span>
-          </button>
-        </div>
-      </div>
-    </div>
+        {/* Super Like Button */}
+        <Pressable className="flex-1 flex-row items-center justify-center py-3 px-6 rounded-full border-2 border-green-600 bg-transparent">
+          <ThumbsUp className="w-6 h-6 text-green-600 mr-2" />
+          <Text className="text-green-600 font-semibold">L</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }

@@ -1,46 +1,40 @@
-import { useNavigate } from "react-router";
-import { Moon, Sun } from "lucide-react";
-import { AnimalCard } from "../components/AnimalCard";
+import { View, Text, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Moon } from 'lucide-react-native';
+import { AnimalCard } from '../components/AnimalCard';
 
 const sampleAnimals = [
   {
-    name: "Yolo",
-    age: 26,
-    image: "https://images.unsplash.com/photo-1587300411107-ec45cf43c7a6?w=600&h=600&fit=crop",
-    tags: ["Online shopping", "Amateur cook", "Anime", "Horror films", "Skincare"],
-  },
-  {
-    name: "Luna",
-    age: 3,
-    image: "https://images.unsplash.com/photo-1552053831-71594a27c62d?w=600&h=600&fit=crop",
-    tags: ["Outdoor", "Active", "Friendly", "Playful"],
+    name: 'Yolo',
+    age: 2,
+    image: 'https://images.unsplash.com/photo-1587300411107-ec45cf43c7a6?w=600&h=600&fit=crop',
+    tags: ['Online shopping', 'Amateur cook', 'Anime', 'Horror films', 'Skincare'],
   },
 ];
 
 export default function DarkTheme() {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-gray-900 py-12 px-8">
+    <View className="flex-1 bg-gray-900">
       {/* Header */}
-      <div className="flex items-center justify-between mb-12">
-        <div>
-          <h1 className="text-4xl font-bold text-white mb-2">Encontre seu novo amigo</h1>
-          <p className="text-gray-400">Deslize para conhecer animais incríveis</p>
-        </div>
+      <View className="px-4 pt-6 pb-4 flex-row justify-between items-start">
+        <View className="flex-1">
+          <Text className="text-3xl font-bold text-white mb-1">Encontre seu novo amigo</Text>
+          <Text className="text-gray-400">Deslize para conhecer animais incríveis</Text>
+        </View>
         
         {/* Theme toggle button */}
-        <button
-          onClick={() => navigate("/light")}
-          className="bg-white/10 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white/20 transition-colors z-50"
-          aria-label="Switch to light theme"
+        <Pressable
+          onPress={() => router.push('/light')}
+          className="bg-white/10 p-3 rounded-full"
         >
-          <Sun className="w-6 h-6 text-white" />
-        </button>
-      </div>
+          <Moon className="w-6 h-6 text-white" />
+        </Pressable>
+      </View>
 
       {/* Main content */}
-      <div className="max-w-6xl mx-auto">
+      <View className="flex-1">
         {sampleAnimals.map((animal, index) => (
           <AnimalCard
             key={index}
@@ -51,7 +45,7 @@ export default function DarkTheme() {
             isDarkTheme={true}
           />
         ))}
-      </div>
-    </div>
+      </View>
+    </View>
   );
 }

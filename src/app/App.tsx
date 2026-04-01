@@ -1,6 +1,22 @@
-import { RouterProvider } from 'react-router';
-import { router } from './routes';
+import { Stack } from 'expo-router';
 
 export default function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <Stack>
+      <Stack.Screen 
+        name="index" 
+        options={{ 
+          headerShown: false,
+          title: 'ONG Animal'
+        }} 
+      />
+      <Stack.Screen 
+        name="light" 
+        options={{ 
+          headerShown: false,
+          title: 'Light Theme'
+        }} 
+      />
+    </Stack>
+  );
 }

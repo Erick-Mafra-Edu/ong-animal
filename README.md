@@ -1,50 +1,73 @@
 # ONG Animal - Pet Adoption Application
 
-Uma aplicação de web para adoção de animais de estimação com interface moderna e responsiva.
+Uma aplicação mobile de adoção de animais de estimação construída com Expo e React Native.
 
 ## Características
 
-- 🎨 Design responsivo para desktop
+- 📱 Aplicativo mobile nativo (iOS e Android)
+- 🎨 Design moderno e responsivo
 - 🌓 Tema claro e escuro
 - 🐾 Catálogo de animais disponíveis para adoção
-- ⚡ Construído com React, TypeScript e Vite
-- 🎯 Interface intuitiva e amigável
+- ⚡ Construído com Expo, React Native e TypeScript
 
 ## Instalação
+
+### Pré-requisitos
+
+- Node.js 18+
+- npm ou yarn
+- Expo CLI: `npm install -g expo-cli`
+
+### Setup
 
 ```bash
 # Instalar dependências
 npm install
 
-# Iniciar servidor de desenvolvimento
-npm run dev
+# Iniciar o projeto (selecione a plataforma)
+npm start
 
-# Construir para produção
-npm run build
+# Para Android
+npm run android
+
+# Para iOS
+npm run ios
 ```
 
 ## Estrutura do Projeto
 
 ```
+app/                     # Rotas da aplicação (Expo Router)
+├── _layout.tsx         # Layout raiz
+├── index.tsx           # Tela inicial (Dark theme)
+└── light.tsx           # Tela light theme
+
 src/
 ├── app/
-│   ├── components/        # Componentes reutilizáveis
-│   ├── screens/          # Páginas da aplicação
-│   ├── App.tsx           # Componente raiz
-│   ├── Root.tsx          # Layout raiz
-│   └── routes.tsx        # Configuração de rotas
-├── styles/               # Estilos globais
-└── main.tsx             # Entrada da aplicação
+│   ├── components/     # Componentes reutilizáveis
+│   ├── screens/        # Telas da aplicação
+│   ├── App.tsx
+│   └── Root.tsx
+└── styles/             # Estilos globais
 ```
 
 ## Tecnologias Utilizadas
 
-- **React 18** - Biblioteca UI
+- **Expo** - Plataforma para desenvolvimento React Native
+- **React Native** - Framework mobile
 - **TypeScript** - Tipagem estática
-- **Vite** - Build tool moderno
-- **Tailwind CSS** - Utility-first CSS framework
-- **React Router** - Roteamento
-- **Lucide React** - Ícones
+- **Expo Router** - Roteamento nativo
+- **NativeWind** - Tailwind CSS para React Native
+- **Lucide React Native** - Ícones
+
+## Scripts Disponíveis
+
+```bash
+npm start      # Inicia o servidor Expo
+npm run ios    # Compila para iOS
+npm run android # Compila para Android
+npm run lint   # Executa linter
+```
 
 ## Contribuindo
 
@@ -53,3 +76,4 @@ Este projeto é parte de um trabalho acadêmico. Contribuições são bem-vindas
 ## Licença
 
 MIT
+
