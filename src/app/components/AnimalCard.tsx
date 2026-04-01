@@ -1,5 +1,6 @@
 import { View, Text, Image, ScrollView, Pressable } from 'react-native';
-import { Heart, X, ThumbsUp } from 'lucide-react-native';
+import { Heart, X, ThumbsUp, ImageOff } from 'lucide-react-native';
+import { useState } from 'react';
 
 interface AnimalCardProps {
   name: string;
@@ -10,16 +11,37 @@ interface AnimalCardProps {
 }
 
 export function AnimalCard({ name, age, image, tags, isDarkTheme = false }: AnimalCardProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
   return (
     <View className={`flex-1 ${isDarkTheme ? 'bg-gray-900' : 'bg-white'}`}>
       <ScrollView className="flex-1 px-4 py-8">
         {/* Image Section */}
-        <View className="rounded-2xl overflow-hidden mb-6 h-80 shadow-lg">
-          <Image
-            source={{ uri: image }}
-            className="w-full h-full"
-            resizeMode="cover"
-          />
+        <View className={`rounded-2xl overflow-hidden mb-6 h-80 shadow-lg ${isDarkTheme ? 'bg-gray-800' : 'bg-gray-100'}`}>
+          {!imageError ? (
+            <>
+              <Image
+                source={{ uri: image }}
+                className="w-full h-full"
+                resizeMode="cover"
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageError(true)}
+              />
+              {!imageLoaded && (
+                <View className="absolute inset-0 flex-1 items-center justify-center bg-gray-300/30">
+                  <Text className="text-gray-600">Carregando imagem...</Text>
+                </View>
+              )}
+            </>
+          ) : (
+            <View className="flex-1 items-center justify-center">
+              <ImageOff className="w-16 h-16 text-gray-400 mb-2" />
+              <Text className={`text-sm ${isDarkTheme ? 'text-gray-400' : 'text-gray-500'}`}>
+                Imagem não disponível
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Name and Age */}
@@ -65,7 +87,7 @@ export function AnimalCard({ name, age, image, tags, isDarkTheme = false }: Anim
       </ScrollView>
 
       {/* Action Buttons */}
-      <View className="flex-row gap-4 px-4 py-6 border-t border-gray-200">
+      <View className={`flex-row gap-4 px-4 py-6 border-t ${isDarkTheme ? 'border-gray-700' : 'border-gray-200'}`}>
         {/* Reject Button */}
         <Pressable className="flex-1 flex-row items-center justify-center py-3 px-6 rounded-full border-2 border-red-500 bg-transparent">
           <X className="w-6 h-6 text-red-500 mr-2" />
