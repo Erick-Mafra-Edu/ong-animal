@@ -99,7 +99,6 @@ export default function Perguntas() {
   const [loading, setLoading] = useState(false);
 
   const perguntaAtual = perguntas[etapaAtual];
-  const progresso = ((etapaAtual) / perguntas.length) * 100;
 
   const selecionarOpcao = (campo: string, valor: string) => {
     setRespostas(prev => ({ ...prev, [campo]: valor }));
