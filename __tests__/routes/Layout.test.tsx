@@ -3,11 +3,16 @@ import { render } from '@testing-library/react';
 import RootLayout from '../../app/_layout';
 
 // Mock do Stack do expo-router
-jest.mock('expo-router', () => ({
-  Stack: {
-    Screen: jest.fn(({ name }) => <div data-testid={`route-${name}`}>{name} route</div>),
-  },
-}));
+jest.mock('expo-router', () => {
+  const ScreenMock = jest.fn(({ name }: { name: string }) => (
+    <div data-testid={`route-${name}`}>{name} route</div>
+  ));
+  const StackMock = ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="stack">{children}</div>
+  );
+  StackMock.Screen = ScreenMock;
+  return { Stack: StackMock };
+});
 
 // Mock do SafeAreaView
 jest.mock('react-native-safe-area-context', () => ({

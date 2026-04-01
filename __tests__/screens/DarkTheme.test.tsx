@@ -11,11 +11,12 @@ jest.mock('expo-router', () => ({
 }));
 
 // Mock do componente AnimalCard
-jest.mock('../../src/app/components/AnimalCard', () => {
-  return function MockAnimalCard() {
-    return <View testID="animal-card">Animal Card</View>;
-  };
-});
+jest.mock('../../src/app/components/AnimalCard', () => ({
+  __esModule: true,
+  AnimalCard: function MockAnimalCard() {
+    return <div data-testid="animal-card">Animal Card</div>;
+  },
+}));
 
 describe('DarkTheme Screen', () => {
   it('renders header with title', () => {
@@ -41,7 +42,8 @@ describe('DarkTheme Screen', () => {
 
   it('uses dark theme styles', () => {
     const { container } = render(<DarkTheme />);
-    const darkView = container.querySelector('[style*="background-color"]');
-    expect(darkView).toBeTruthy();
+    // DarkTheme uses bg-gray-900 class for dark background
+    const darkView = container.querySelector('.bg-gray-900, [className*="bg-gray-9"]');
+    expect(container.innerHTML).toContain('bg-gray-9');
   });
 });

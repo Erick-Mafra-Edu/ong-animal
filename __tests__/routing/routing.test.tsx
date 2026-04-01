@@ -8,17 +8,33 @@ jest.mock('expo-router', () => ({
 }));
 
 // Mock das telas
-jest.mock('../../src/app/screens/DarkTheme', () => {
-  return function MockDarkTheme() {
-    return <div data-testid="dark-theme">Dark Theme Screen</div>;
-  };
-});
+jest.mock('../../src/app/screens/DarkTheme', () => ({
+  __esModule: true,
+  default: function MockDarkTheme() {
+    const { useRouter } = require('expo-router');
+    const router = useRouter();
+    return (
+      <div data-testid="dark-theme">
+        <span>Dark Theme Screen</span>
+        <button onClick={() => router.push('/light')}>Toggle Theme</button>
+      </div>
+    );
+  },
+}));
 
-jest.mock('../../src/app/screens/LightTheme', () => {
-  return function MockLightTheme() {
-    return <div data-testid="light-theme">Light Theme Screen</div>;
-  };
-});
+jest.mock('../../src/app/screens/LightTheme', () => ({
+  __esModule: true,
+  default: function MockLightTheme() {
+    const { useRouter } = require('expo-router');
+    const router = useRouter();
+    return (
+      <div data-testid="light-theme">
+        <span>Light Theme Screen</span>
+        <button onClick={() => router.push('/')}>Toggle Theme</button>
+      </div>
+    );
+  },
+}));
 
 describe('Routing - Web & Native Compatibility', () => {
   let mockPush: jest.Mock;
@@ -43,7 +59,7 @@ describe('Routing - Web & Native Compatibility', () => {
       
       const buttons = screen.queryAllByRole('button');
       if (buttons.length > 0) {
-        fireEvent.press(buttons[0]);
+        fireEvent.click(buttons[0]);
         // Navigation should be called with '/light'
       }
     });
@@ -73,7 +89,7 @@ describe('Routing - Web & Native Compatibility', () => {
       
       const buttons = screen.queryAllByRole('button');
       if (buttons.length > 0) {
-        fireEvent.press(buttons[0]);
+        fireEvent.click(buttons[0]);
         // Navigation should be called with '/'
       }
     });
