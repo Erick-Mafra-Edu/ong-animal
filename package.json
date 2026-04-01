@@ -10,17 +10,18 @@
     "lint": "eslint src --ext ts,tsx"
   },
   "dependencies": {
-    "expo": "^50.0.0",
-    "expo-router": "^3.0.0",
-    "react": "^18.2.0",
-    "react-native": "^0.73.0",
-    "react-native-safe-area-context": "^4.7.0",
-    "react-native-screens": "^3.27.0",
-    "lucide-react-native": "^0.378.0"
+    "@expo/cli": "^55.0.19",
+    "expo": "^55.0.9",
+    "expo-router": "~55.0.8",
+    "lucide-react-native": "^0.378.0",
+    "react": "^19.2.0",
+    "react-native": "^0.83.4",
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-screens": "~4.23.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
     "@babel/preset-env": "^7.23.0",
+    "@types/react": "~19.2.10",
     "typescript": "^5.3.0"
   }
 }
