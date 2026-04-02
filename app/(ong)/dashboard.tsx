@@ -1,8 +1,8 @@
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { supabase, Animal } from '../../services/supabase';
-import { PlusCircle, List, Users, CheckCircle } from 'lucide-react-native';
+import { supabase } from '../../services/supabase';
+import { PlusCircle, Users } from 'lucide-react-native';
 
 export default function Dashboard() {
   const router = useRouter();

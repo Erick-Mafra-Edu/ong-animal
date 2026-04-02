@@ -51,7 +51,7 @@ export default function CadastrarAnimal() {
     if (error) {
       setErro(error.message);
     } else {
-      router.back();
+      router.replace('/(ong)/dashboard');
     }
   };
 
@@ -98,14 +98,6 @@ export default function CadastrarAnimal() {
   return (
     <ScrollView className="flex-1 bg-gray-900">
       <View className="px-6 py-12">
-        <Pressable
-          className="mb-8"
-          onPress={() => router.back()}
-          testID="back-button"
-        >
-          <Text className="text-gray-400">← Voltar</Text>
-        </Pressable>
-
         <Text className="text-2xl font-bold text-white mb-8">Cadastrar animal</Text>
 
         <View className="gap-5">

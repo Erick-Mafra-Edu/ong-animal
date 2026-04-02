@@ -1,5 +1,4 @@
 import { View, Text, Pressable, FlatList, Image } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { supabase, Match, Animal, UserProfile } from '../../services/supabase';
 import { CheckCircle, XCircle } from 'lucide-react-native';
@@ -11,7 +10,6 @@ interface Interessado {
 }
 
 export default function Interessados() {
-  const router = useRouter();
   const [interessados, setInteressados] = useState<Interessado[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -82,10 +80,7 @@ export default function Interessados() {
 
   return (
     <View className="flex-1 bg-gray-900">
-      <View className="px-6 pt-12 pb-4 flex-row items-center gap-4">
-        <Pressable onPress={() => router.back()} testID="back-button">
-          <Text className="text-gray-400">←</Text>
-        </Pressable>
+      <View className="px-6 pt-12 pb-4">
         <Text className="text-2xl font-bold text-white">Interessados</Text>
       </View>
 
