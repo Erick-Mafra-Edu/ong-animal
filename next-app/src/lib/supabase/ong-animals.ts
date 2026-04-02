@@ -56,6 +56,7 @@ export async function insertOngAnimal(
 ): Promise<void> {
   const { error } = await client.from('swipe_profiles').insert({
     ...animal,
+    // New animals are appended at the end; the consumer can reorder via the sort_order column later.
     sort_order: 0,
   })
 

@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useSupabaseClient } from '@/providers/supabase-provider'
 import { fetchOngDashboardStats, type OngDashboardStats } from '@/lib/supabase/ong-animals'
