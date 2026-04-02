@@ -71,11 +71,15 @@ export class SocketIOAdapter implements IChatAdapter {
       this.socket.emit(
         'get_history',
         { match_id: matchId },
-        (messages: ChatMessage[] | { error: string }) => {
+        (messages: ChatMessage[] | { error: string } | undefined | null) => {
+          if (!messages) {
+            resolve([])
+            return
+          }
           if (!Array.isArray(messages) && messages?.error) {
             reject(new Error(messages.error))
           } else {
-            resolve(messages as ChatMessage[])
+            resolve(Array.isArray(messages) ? messages : [])
           }
         },
       )

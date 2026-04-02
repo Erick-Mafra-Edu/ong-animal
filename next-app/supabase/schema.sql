@@ -82,6 +82,7 @@ create policy "Match participants can read messages"
       select 1 from public.chat_matches
       where chat_matches.id = chat_messages.match_id
         and chat_matches.user_id = auth.uid()
+        and chat_matches.status = 'approved'
     )
   );
 

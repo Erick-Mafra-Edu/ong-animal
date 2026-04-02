@@ -23,6 +23,7 @@ export function ChatWindow({ matchId, profileName, profileImage, initialMessages
   const [userId, setUserId] = useState<string | null>(null)
   const [isConnecting, setIsConnecting] = useState(initialMessages.length === 0)
   const [sendError, setSendError] = useState<string | null>(null)
+  const [connectWarning, setConnectWarning] = useState<string | null>(null)
   const adapterRef = useRef<IChatAdapter | null>(null)
   const bottomRef = useRef<HTMLDivElement | null>(null)
 
@@ -58,7 +59,9 @@ export function ChatWindow({ matchId, profileName, profileImage, initialMessages
 
         await adapter.connect(matchId)
       } catch {
-        // Adapter connection failures are non-fatal; messages can still be sent via REST
+        // Adapter connection failures are non-fatal – REST sends still work.
+        // Notify the user that live updates may be unavailable.
+        if (!cancelled) setConnectWarning('Atualizações em tempo real indisponíveis. Atualize a página para ver novas mensagens.')
       } finally {
         if (!cancelled) setIsConnecting(false)
       }
@@ -166,6 +169,9 @@ export function ChatWindow({ matchId, profileName, profileImage, initialMessages
       </div>
 
       {/* Input */}
+      {connectWarning ? (
+        <p className="px-4 pb-1 text-xs text-amber-600">{connectWarning}</p>
+      ) : null}
       {sendError ? (
         <p className="px-4 pb-1 text-xs text-red-500">{sendError}</p>
       ) : null}
