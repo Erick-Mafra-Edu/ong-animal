@@ -6,6 +6,7 @@ export default function OngLayout() {
       <Stack.Screen name="dashboard" />
       <Stack.Screen name="cadastrar-animal" />
       <Stack.Screen name="interessados" />
+      <Stack.Screen name="mensagens" />
     </Stack>
   );
 }

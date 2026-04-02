@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Heart, Star, User } from 'lucide-react-native';
+import { Heart, Star, User, MessageCircle } from 'lucide-react-native';
 
 export default function TabsLayout() {
   return (
@@ -23,6 +23,13 @@ export default function TabsLayout() {
         options={{
           title: 'Favoritos',
           tabBarIcon: ({ color, size }) => <Star color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="conversas"
+        options={{
+          title: 'Conversas',
+          tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />,
         }}
       />
       <Tabs.Screen

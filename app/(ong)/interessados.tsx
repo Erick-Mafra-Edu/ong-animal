@@ -2,7 +2,7 @@ import { View, Text, Pressable, FlatList, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { supabase, Match, Animal, UserProfile } from '../../services/supabase';
-import { CheckCircle, XCircle } from 'lucide-react-native';
+import { CheckCircle, XCircle, MessageCircle } from 'lucide-react-native';
 
 interface Interessado {
   match: Match;
@@ -13,6 +13,7 @@ interface Interessado {
 export default function Interessados() {
   const router = useRouter();
   const [interessados, setInteressados] = useState<Interessado[]>([]);
+  const [aprovados, setAprovados] = useState<Interessado[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,26 +39,40 @@ export default function Interessados() {
     }
 
     const animalIds = animais.map(a => a.id);
-    const { data: matches } = await supabase
+
+    const { data: matchesPendentes } = await supabase
       .from('matches')
       .select('*')
       .in('animal_id', animalIds)
       .eq('status', 'aguardando');
 
-    if (matches?.length) {
-      const userIds = matches.map(m => m.user_id);
+    const { data: matchesAprovados } = await supabase
+      .from('matches')
+      .select('*')
+      .in('animal_id', animalIds)
+      .eq('status', 'aprovado');
+
+    const allMatches = [
+      ...(matchesPendentes ?? []),
+      ...(matchesAprovados ?? []),
+    ];
+
+    if (allMatches.length) {
+      const userIds = [...new Set(allMatches.map(m => m.user_id))];
       const { data: usuarios } = await supabase
         .from('users')
         .select('*')
         .in('id', userIds);
 
-      const lista: Interessado[] = matches.map(match => ({
-        match,
-        animal: animais.find(a => a.id === match.animal_id)!,
-        adotante: (usuarios ?? []).find(u => u.id === match.user_id) as UserProfile,
-      }));
+      const buildLista = (matches: Match[]): Interessado[] =>
+        matches.map(match => ({
+          match,
+          animal: animais.find(a => a.id === match.animal_id)!,
+          adotante: (usuarios ?? []).find(u => u.id === match.user_id) as UserProfile,
+        })).filter(i => i.animal && i.adotante);
 
-      setInteressados(lista.filter(i => i.animal && i.adotante));
+      setInteressados(buildLista(matchesPendentes ?? []));
+      setAprovados(buildLista(matchesAprovados ?? []));
     }
 
     setLoading(false);
@@ -69,6 +84,12 @@ export default function Interessados() {
       .update({ status })
       .eq('id', matchId);
 
+    if (status === 'aprovado') {
+      const aprovado = interessados.find(i => i.match.id === matchId);
+      if (aprovado) {
+        setAprovados(prev => [...prev, { ...aprovado, match: { ...aprovado.match, status: 'aprovado' } }]);
+      }
+    }
     setInteressados(prev => prev.filter(i => i.match.id !== matchId));
   };
 
@@ -89,7 +110,7 @@ export default function Interessados() {
         <Text className="text-2xl font-bold text-white">Interessados</Text>
       </View>
 
-      {interessados.length === 0 ? (
+      {interessados.length === 0 && aprovados.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-5xl mb-4">👥</Text>
           <Text className="text-xl font-bold text-white text-center mb-2">
@@ -101,7 +122,10 @@ export default function Interessados() {
         </View>
       ) : (
         <FlatList
-          data={interessados}
+          data={[
+            ...interessados.map(i => ({ ...i, secao: 'pendente' as const })),
+            ...aprovados.map(i => ({ ...i, secao: 'aprovado' as const })),
+          ]}
           keyExtractor={item => item.match.id}
           contentContainerStyle={{ padding: 16, gap: 12 }}
           renderItem={({ item }) => (
@@ -133,24 +157,41 @@ export default function Interessados() {
               </View>
 
               {/* Botões de ação */}
-              <View className="flex-row border-t border-gray-700">
-                <Pressable
-                  className="flex-1 flex-row items-center justify-center gap-2 py-4 border-r border-gray-700"
-                  onPress={() => atualizarStatus(item.match.id, 'recusado')}
-                  testID={`recusar-${item.match.id}`}
-                >
-                  <XCircle color="#f87171" size={20} />
-                  <Text className="text-red-400 font-semibold">Recusar</Text>
-                </Pressable>
-                <Pressable
-                  className="flex-1 flex-row items-center justify-center gap-2 py-4"
-                  onPress={() => atualizarStatus(item.match.id, 'aprovado')}
-                  testID={`aprovar-${item.match.id}`}
-                >
-                  <CheckCircle color="#4ade80" size={20} />
-                  <Text className="text-green-400 font-semibold">Aprovar</Text>
-                </Pressable>
-              </View>
+              {item.secao === 'pendente' ? (
+                <View className="flex-row border-t border-gray-700">
+                  <Pressable
+                    className="flex-1 flex-row items-center justify-center gap-2 py-4 border-r border-gray-700"
+                    onPress={() => atualizarStatus(item.match.id, 'recusado')}
+                    testID={`recusar-${item.match.id}`}
+                  >
+                    <XCircle color="#f87171" size={20} />
+                    <Text className="text-red-400 font-semibold">Recusar</Text>
+                  </Pressable>
+                  <Pressable
+                    className="flex-1 flex-row items-center justify-center gap-2 py-4"
+                    onPress={() => atualizarStatus(item.match.id, 'aprovado')}
+                    testID={`aprovar-${item.match.id}`}
+                  >
+                    <CheckCircle color="#4ade80" size={20} />
+                    <Text className="text-green-400 font-semibold">Aprovar</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <View className="flex-row border-t border-gray-700">
+                  <View className="flex-1 flex-row items-center justify-center gap-2 py-3">
+                    <CheckCircle color="#4ade80" size={16} />
+                    <Text className="text-green-400 text-sm font-semibold">Aprovado</Text>
+                  </View>
+                  <Pressable
+                    className="flex-1 flex-row items-center justify-center gap-2 py-4 border-l border-gray-700"
+                    onPress={() => router.push(`/chat/${item.match.id}`)}
+                    testID={`chat-${item.match.id}`}
+                  >
+                    <MessageCircle color="#f97316" size={20} />
+                    <Text className="text-orange-400 font-semibold">Chat</Text>
+                  </Pressable>
+                </View>
+              )}
             </View>
           )}
         />

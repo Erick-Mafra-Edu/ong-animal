@@ -2,7 +2,7 @@ import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { supabase, Animal } from '../../services/supabase';
-import { PlusCircle, List, Users, CheckCircle } from 'lucide-react-native';
+import { PlusCircle, List, Users, CheckCircle, MessageCircle } from 'lucide-react-native';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -102,6 +102,18 @@ export default function Dashboard() {
                 <Text className="text-white text-xs font-bold">{stats.interessados}</Text>
               </View>
             )}
+          </Pressable>
+
+          <Pressable
+            className="bg-gray-800 rounded-2xl p-5 flex-row items-center gap-4"
+            onPress={() => router.push('/(ong)/mensagens')}
+            testID="ver-mensagens-btn"
+          >
+            <MessageCircle color="#f97316" size={28} />
+            <View className="flex-1">
+              <Text className="text-white font-bold text-lg">Mensagens</Text>
+              <Text className="text-gray-400 text-sm">Conversar com adotantes aprovados</Text>
+            </View>
           </Pressable>
         </View>
       </View>

@@ -69,14 +69,21 @@ jest.mock('react-native', () => {
         {children}
       </button>
     ),
+    KeyboardAvoidingView: ({ children, testID, ...props }: any) => (
+      <div {...toDataTestId({ testID, ...props })} role="generic">
+        {children}
+      </div>
+    ),
     ActivityIndicator: ({ testID }: any) => (
       <div data-testid={testID} role="progressbar" />
     ),
-    FlatList: ({ data, renderItem, keyExtractor, testID, ...props }: any) => (
+    FlatList: ({ data, renderItem, keyExtractor, testID, ListEmptyComponent, contentContainerStyle, ...props }: any) => (
       <div {...toDataTestId({ testID, ...props })} role="list">
-        {(data ?? []).map((item: any, index: number) =>
-          renderItem({ item, index })
-        )}
+        {(data ?? []).length === 0
+          ? ListEmptyComponent ?? null
+          : (data ?? []).map((item: any, index: number) =>
+              renderItem({ item, index })
+            )}
       </div>
     ),
     Modal: ({ children, visible, testID }: any) =>

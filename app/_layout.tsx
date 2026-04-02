@@ -17,6 +17,7 @@ export default function RootLayout() {
           <Stack.Screen name="(onboarding)" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="(ong)" />
+          <Stack.Screen name="chat" />
         </Stack>
       </SafeAreaView>
     </ThemeProvider>
