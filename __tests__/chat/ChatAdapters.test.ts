@@ -116,6 +116,15 @@ describe('SocketIOAdapter', () => {
     mockSocket.connected = true;
   });
 
+  it('connect rejects when EXPO_PUBLIC_SOCKET_IO_URL is not set', async () => {
+    const originalUrl = process.env.EXPO_PUBLIC_SOCKET_IO_URL;
+    delete process.env.EXPO_PUBLIC_SOCKET_IO_URL;
+    await expect(adapter.connect('match-1')).rejects.toThrow(
+      'Socket.IO URL is not configured'
+    );
+    process.env.EXPO_PUBLIC_SOCKET_IO_URL = originalUrl;
+  });
+
   it('registers message callback', () => {
     const callback = jest.fn();
     adapter.onMessage(callback);

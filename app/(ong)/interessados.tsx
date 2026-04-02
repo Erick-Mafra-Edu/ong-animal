@@ -79,10 +79,12 @@ export default function Interessados() {
   };
 
   const atualizarStatus = async (matchId: string, status: 'aprovado' | 'recusado') => {
-    await supabase
+    const { error } = await supabase
       .from('matches')
       .update({ status })
       .eq('id', matchId);
+
+    if (error) return;
 
     if (status === 'aprovado') {
       const aprovado = interessados.find(i => i.match.id === matchId);

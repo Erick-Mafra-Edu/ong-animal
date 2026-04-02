@@ -1,15 +1,20 @@
 import { io, Socket } from 'socket.io-client';
 import { IChatAdapter, ChatMessage } from './IChatAdapter';
 
-const SOCKET_IO_URL = process.env.EXPO_PUBLIC_SOCKET_IO_URL ?? '';
-
 export class SocketIOAdapter implements IChatAdapter {
   private socket: Socket | null = null;
   private messageCallback: ((message: ChatMessage) => void) | null = null;
 
   async connect(matchId: string): Promise<void> {
+    const url = process.env.EXPO_PUBLIC_SOCKET_IO_URL ?? '';
+    if (!url) {
+      throw new Error(
+        'Socket.IO URL is not configured. Set EXPO_PUBLIC_SOCKET_IO_URL in your environment.'
+      );
+    }
+
     return new Promise((resolve, reject) => {
-      this.socket = io(SOCKET_IO_URL, {
+      this.socket = io(url, {
         query: { matchId },
         transports: ['websocket'],
       });

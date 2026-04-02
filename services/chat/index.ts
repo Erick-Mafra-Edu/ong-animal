@@ -4,10 +4,17 @@ export { SocketIOAdapter } from './SocketIOAdapter';
 
 export type ChatAdapterType = 'supabase' | 'socketio';
 
-const DEFAULT_ADAPTER: ChatAdapterType =
-  (process.env.EXPO_PUBLIC_CHAT_ADAPTER as ChatAdapterType) ?? 'supabase';
+const VALID_ADAPTERS: ChatAdapterType[] = ['supabase', 'socketio'];
 
-export function createChatAdapter(type: ChatAdapterType = DEFAULT_ADAPTER) {
+function resolveAdapterType(): ChatAdapterType {
+  const env = process.env.EXPO_PUBLIC_CHAT_ADAPTER;
+  if (env && VALID_ADAPTERS.includes(env as ChatAdapterType)) {
+    return env as ChatAdapterType;
+  }
+  return 'supabase';
+}
+
+export function createChatAdapter(type: ChatAdapterType = resolveAdapterType()) {
   if (type === 'socketio') {
     const { SocketIOAdapter } = require('./SocketIOAdapter');
     return new SocketIOAdapter();
