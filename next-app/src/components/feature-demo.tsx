@@ -228,9 +228,12 @@ export function FeatureDemo() {
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <button className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:shadow-md">
+          <Link
+            href="/chat"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:shadow-md"
+          >
             Abrir chat
-          </button>
+          </Link>
           <Link
             href="/login"
             className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:shadow-md"

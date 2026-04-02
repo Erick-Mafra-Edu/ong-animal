@@ -40,15 +40,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span>Swipe</span>
             </Link>
 
-            <button
-              type="button"
-              disabled
-              title="Chat em breve"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-500 transition"
+            <Link
+              href="/chat"
+              aria-current={pathname.startsWith('/chat') ? 'page' : undefined}
+              className={`inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold transition hover:-translate-y-0.5 hover:shadow-md ${pathname.startsWith('/chat') ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-800'}`}
             >
               <span aria-hidden="true">💬</span>
               <span>Chat</span>
-            </button>
+            </Link>
 
             <Link
               href="/login"
@@ -72,15 +71,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span>Swipe</span>
             </Link>
 
-            <button
-              type="button"
-              disabled
-              title="Chat em breve"
-              className="flex flex-col items-center gap-1 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-400 transition"
+            <Link
+              href="/chat"
+              aria-current={pathname.startsWith('/chat') ? 'page' : undefined}
+              className={`flex flex-col items-center gap-1 rounded-2xl px-3 py-2 text-xs font-semibold transition ${pathname.startsWith('/chat') ? 'text-emerald-600' : 'text-slate-500'}`}
             >
               <span className="text-2xl" aria-hidden="true">💬</span>
               <span>Chat</span>
-            </button>
+            </Link>
 
             <Link
               href="/login"
