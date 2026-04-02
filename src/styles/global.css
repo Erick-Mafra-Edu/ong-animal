@@ -1,15 +1,15 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import './index.css';
 
 /* Styles globais */
 body {
-  @apply bg-white text-gray-900;
+  background-color: #ffffff;
+  color: #111827;
 }
 
 /* Dark mode */
 @media (prefers-color-scheme: dark) {
   body {
-    @apply bg-gray-900 text-white;
+    background-color: #111827;
+    color: #ffffff;
   }
 }

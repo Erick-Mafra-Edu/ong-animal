@@ -32,6 +32,9 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# playwright MCP session artifacts
+.playwright-mcp/
+
 # editor
 .vscode
 .idea

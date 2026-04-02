@@ -1,10 +1,10 @@
 import { View } from 'react-native';
-import DarkTheme from '../src/app/screens/DarkTheme';
+import HomeScreen from '../src/screens/HomeScreen';
 
 export default function Home() {
   return (
     <View className="flex-1">
-      <DarkTheme />
+      <HomeScreen />
     </View>
   );
 }
