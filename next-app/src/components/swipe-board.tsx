@@ -2,87 +2,176 @@
 
 import React from 'react'
 import Image from 'next/image'
-import { useMemo, useState } from 'react'
-
-type SwipeProfile = {
-  id: string
-  name: string
-  age: number
-  location: string
-  image: string
-  bio: string
-  traits: string[]
-}
-
-const initialProfiles: SwipeProfile[] = [
-  {
-    id: 'yolo',
-    name: 'Yolo',
-    age: 2,
-    location: 'São Paulo, SP',
-    image:
-      'https://firebasestorage.googleapis.com/v0/b/codeless-app.appspot.com/o/projects%2F0SObcceZFqcMj44PAXdK%2F2caeaa6e02fa3ae736d01407675af388d36db7dcRectangle.png?alt=media&token=d65ade4e-cfa2-493d-924f-9f6d4275a669',
-    bio: 'Companheiro tranquilo, ótimo para quem está começando a rotina de adoção.',
-    traits: ['Calmo', 'Vacinado', 'Sociável'],
-  },
-  {
-    id: 'mila',
-    name: 'Mila',
-    age: 1,
-    location: 'Campinas, SP',
-    image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80',
-    bio: 'Cheia de energia e carinhosa, adora brincadeiras e passeios longos.',
-    traits: ['Ativa', 'Inteligente', 'Brincalhona'],
-  },
-  {
-    id: 'pingo',
-    name: 'Pingo',
-    age: 4,
-    location: 'Sorocaba, SP',
-    image: 'https://images.unsplash.com/photo-1507146426996-ef05306b995a?auto=format&fit=crop&w=1200&q=80',
-    bio: 'Mais reservado no início, cria vínculo forte com adaptação gradual.',
-    traits: ['Gentil', 'Observador', 'Carinhoso'],
-  },
-]
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSupabaseClient } from '@/providers/supabase-provider'
+import { fetchSwipeProfiles, getFallbackSwipeProfiles } from '@/lib/supabase/swipe-profiles'
+import type { SwipeProfile } from '@/lib/supabase/swipe-profiles'
 
 type SwipeAction = 'pass' | 'like' | 'super-like'
+type Motion = 'idle' | 'enter' | 'exit-left' | 'exit-right' | 'exit-up'
 
-export function SwipeBoard() {
-  const [profiles, setProfiles] = useState(initialProfiles)
+type SwipeBoardProps = {
+  initialProfiles?: SwipeProfile[]
+}
+
+const motionClasses: Record<Motion, string> = {
+  idle: 'translate-y-0 scale-100 opacity-100',
+  enter: 'translate-y-4 scale-[0.98] opacity-0',
+  'exit-left': 'translate-x-[-38%] rotate-[-10deg] scale-[0.98] opacity-0',
+  'exit-right': 'translate-x-[38%] rotate-[10deg] scale-[0.98] opacity-0',
+  'exit-up': '-translate-y-[22%] scale-[0.95] opacity-0',
+}
+
+function exitMotion(action: SwipeAction): Motion {
+  if (action === 'pass') return 'exit-left'
+  if (action === 'like') return 'exit-right'
+  return 'exit-up'
+}
+
+function renderTrait(trait: string) {
+  return (
+    <span
+      key={trait}
+      className="rounded-full border border-white/35 bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur"
+    >
+      {trait}
+    </span>
+  )
+}
+
+export function SwipeBoard({ initialProfiles }: SwipeBoardProps) {
+  const supabase = useSupabaseClient()
+  const hasAnimatedRef = useRef(false)
+  const swipeTimerRef = useRef<number | null>(null)
+  const settleTimerRef = useRef<number | null>(null)
+
+  const defaultProfiles = getFallbackSwipeProfiles()
+  const firstProfiles = initialProfiles?.length ? initialProfiles : defaultProfiles
+
+  const [profiles, setProfiles] = useState<SwipeProfile[]>(firstProfiles)
   const [history, setHistory] = useState<{ id: string; action: SwipeAction }[]>([])
+  const [motion, setMotion] = useState<Motion>('idle')
+  const [pendingAction, setPendingAction] = useState<SwipeAction | null>(null)
+  const [isLoading, setIsLoading] = useState(!initialProfiles?.length)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [totalProfiles, setTotalProfiles] = useState(firstProfiles.length)
 
   const currentProfile = profiles[0]
+  const nextProfile = profiles[1]
 
-  const stats = useMemo(() => {
-    const likes = history.filter((item) => item.action === 'like').length
-    const superLikes = history.filter((item) => item.action === 'super-like').length
-    const passes = history.filter((item) => item.action === 'pass').length
+  const stats = useMemo(
+    () => ({
+      likes: history.filter((item) => item.action === 'like').length,
+      superLikes: history.filter((item) => item.action === 'super-like').length,
+      passes: history.filter((item) => item.action === 'pass').length,
+    }),
+    [history],
+  )
 
-    return { likes, superLikes, passes }
-  }, [history])
+  useEffect(() => {
+    let cancelled = false
 
-  function swipe(action: SwipeAction) {
+    async function loadProfiles() {
+      if (initialProfiles?.length) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        setIsLoading(true)
+        const remoteProfiles = await fetchSwipeProfiles(supabase)
+
+        if (cancelled) return
+
+        if (remoteProfiles.length > 0) {
+          setProfiles(remoteProfiles)
+          setTotalProfiles(remoteProfiles.length)
+          setLoadError(null)
+        } else {
+          const fallback = getFallbackSwipeProfiles()
+          setProfiles(fallback)
+          setTotalProfiles(fallback.length)
+          setLoadError('Nenhum perfil ativo encontrado no Supabase. Exibindo perfis de fallback.')
+        }
+      } catch (error) {
+        if (cancelled) return
+
+        const fallback = getFallbackSwipeProfiles()
+        setProfiles(fallback)
+        setTotalProfiles(fallback.length)
+        setLoadError(error instanceof Error ? error.message : 'Falha ao carregar perfis do Supabase.')
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+
+    void loadProfiles()
+
+    return () => {
+      cancelled = true
+      if (swipeTimerRef.current) window.clearTimeout(swipeTimerRef.current)
+      if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current)
+    }
+  }, [initialProfiles, supabase])
+
+  useEffect(() => {
     if (!currentProfile) return
 
-    setHistory((prev) => [...prev, { id: currentProfile.id, action }])
-    setProfiles((prev) => prev.slice(1))
+    if (!hasAnimatedRef.current) {
+      hasAnimatedRef.current = true
+      return
+    }
+
+    setMotion('enter')
+    settleTimerRef.current = window.setTimeout(() => setMotion('idle'), 220)
+
+    return () => {
+      if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current)
+    }
+  }, [currentProfile?.id])
+
+  function swipe(action: SwipeAction) {
+    if (!currentProfile || motion !== 'idle' || isLoading) return
+
+    setPendingAction(action)
+    setMotion(exitMotion(action))
+    setHistory((previous) => [...previous, { id: currentProfile.id, action }])
+
+    if (swipeTimerRef.current) window.clearTimeout(swipeTimerRef.current)
+
+    swipeTimerRef.current = window.setTimeout(() => {
+      setProfiles((previous) => previous.slice(1))
+      setPendingAction(null)
+      setMotion('enter')
+      settleTimerRef.current = window.setTimeout(() => setMotion('idle'), 220)
+    }, 220)
   }
 
   function restart() {
-    setProfiles(initialProfiles)
+    if (swipeTimerRef.current) window.clearTimeout(swipeTimerRef.current)
+    if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current)
+
+    const startProfiles = initialProfiles?.length ? initialProfiles : getFallbackSwipeProfiles()
+    setProfiles(startProfiles)
+    setTotalProfiles(startProfiles.length)
     setHistory([])
+    setPendingAction(null)
+    setMotion('enter')
+    settleTimerRef.current = window.setTimeout(() => setMotion('idle'), 220)
   }
 
   if (!currentProfile) {
     return (
-      <section className="mx-auto max-w-5xl rounded-[36px] border border-slate-200 bg-white/80 p-8 text-center shadow-[0_24px_90px_-45px_rgba(15,23,42,0.35)] backdrop-blur-xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Swipe concluído</p>
-        <h1 className="mt-3 text-4xl font-black tracking-tight text-slate-950">Você avaliou todos os perfis.</h1>
-        <p className="mt-4 text-slate-600">Resumo da sessão: {stats.likes} likes, {stats.superLikes} super likes e {stats.passes} passes.</p>
+      <section className="mx-auto max-w-5xl rounded-[36px] border border-white/30 bg-slate-950/80 p-8 text-center text-white shadow-[0_24px_90px_-45px_rgba(2,6,23,0.8)] backdrop-blur-xl">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">Swipe concluído</p>
+        <h1 className="mt-3 text-4xl font-black tracking-tight">Você avaliou todos os perfis.</h1>
+        <p className="mt-4 text-white/80">
+          Resumo da sessão: {stats.likes} likes, {stats.superLikes} super likes e {stats.passes} passes.
+        </p>
         <button
           type="button"
           onClick={restart}
-          className="mt-6 rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
+          className="mt-6 rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-emerald-400"
         >
           Recomeçar sessão
         </button>
@@ -90,83 +179,167 @@ export function SwipeBoard() {
     )
   }
 
+  const viewedRatio = totalProfiles > 0 ? history.length / totalProfiles : 0
+  const activeProgressIndex = Math.min(2, Math.floor(viewedRatio * 3))
+
   return (
-    <section className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[0.7fr_1.3fr]">
-      <aside className="rounded-[32px] border border-slate-200 bg-white/80 p-6 shadow-[0_24px_80px_-38px_rgba(15,23,42,0.35)] backdrop-blur-xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-500">Sessão pós-login</p>
-        <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950">Tela principal de swipe</h1>
-        <p className="mt-3 text-sm leading-7 text-slate-600">
-          Esta é a área principal após autenticação, simulando o fluxo real de seleção de perfis para adoção.
-        </p>
-
-        <div className="mt-5 space-y-3">
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
-            <span className="font-semibold text-slate-900">Perfis restantes:</span> {profiles.length}
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
-            <span className="font-semibold text-slate-900">Likes:</span> {stats.likes}
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
-            <span className="font-semibold text-slate-900">Super likes:</span> {stats.superLikes}
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
-            <span className="font-semibold text-slate-900">Passes:</span> {stats.passes}
-          </div>
-        </div>
-      </aside>
-
-      <div className="rounded-[36px] border border-white/80 bg-white/85 p-4 shadow-[0_30px_90px_-28px_rgba(15,23,42,0.35)] backdrop-blur-2xl">
-        <div className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-slate-950">
-          <div className="relative aspect-[4/5] min-h-[520px]">
-            <Image src={currentProfile.image} alt={currentProfile.name} fill priority className="object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-              <div className="flex items-end justify-between gap-4">
-                <div>
-                  <p className="text-4xl font-black leading-none">{currentProfile.name}</p>
-                  <p className="mt-2 text-sm font-medium text-white/80">{currentProfile.age} anos • {currentProfile.location}</p>
-                </div>
-                <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] backdrop-blur-md">
-                  Perfil ativo
-                </span>
+    <section className="mx-auto w-full max-w-7xl">
+      <div className="hidden lg:grid lg:grid-cols-[1.02fr_0.98fr] lg:gap-10">
+        <article className="relative overflow-hidden rounded-[28px] border border-white/20 bg-slate-950 shadow-[0_24px_100px_-42px_rgba(2,6,23,0.9)]">
+          <div className="relative min-h-[680px] overflow-hidden">
+            {nextProfile ? (
+              <div className="absolute inset-0 scale-[0.99] opacity-70 blur-[1px]">
+                <Image src={nextProfile.image} alt={nextProfile.name} fill className="object-cover" />
+                <div className="absolute inset-0 bg-black/35" />
               </div>
+            ) : null}
 
-              <p className="mt-4 max-w-xl text-sm leading-6 text-white/88">{currentProfile.bio}</p>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {currentProfile.traits.map((trait) => (
-                  <span key={trait} className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur-md">
-                    {trait}
-                  </span>
-                ))}
-              </div>
+            <div className={`absolute inset-0 transition-all duration-200 ease-out ${motionClasses[motion]}`}>
+              <Image src={currentProfile.image} alt={currentProfile.name} fill priority className="object-cover" />
             </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
           </div>
-        </div>
+        </article>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <button
-            type="button"
-            onClick={() => swipe('pass')}
-            className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            Passar
-          </button>
-          <button
-            type="button"
-            onClick={() => swipe('like')}
-            className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            Curtir
-          </button>
+        <aside className="flex min-h-[680px] flex-col rounded-[28px] border border-white/15 bg-slate-950/75 p-10 text-white shadow-[0_24px_100px_-42px_rgba(2,6,23,0.95)] backdrop-blur-xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/50">Tela principal de swipe</p>
+          <div className="mt-8 flex items-end gap-3">
+            <h1 className="text-6xl font-black leading-none">{currentProfile.name}</h1>
+            <span className="mb-2 rounded-full bg-blue-500 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em]">ok</span>
+          </div>
+          <p className="mt-2 text-3xl font-medium text-white/85">{currentProfile.age}</p>
+
+          <p className="mt-8 max-w-xl text-lg leading-9 text-white/80">{currentProfile.bio}</p>
+
+          <h2 className="mt-8 text-2xl font-bold">Interesses</h2>
+          <div className="mt-4 flex flex-wrap gap-3">{currentProfile.traits.map(renderTrait)}</div>
+
+          <div className="mt-12 grid grid-cols-2 gap-4">
+            <button
+              type="button"
+              onClick={() => swipe('pass')}
+              disabled={isLoading || motion !== 'idle'}
+              className="rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-4 text-lg font-semibold text-white transition hover:-translate-y-0.5 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Not Interested
+            </button>
+            <button
+              type="button"
+              onClick={() => swipe('like')}
+              disabled={isLoading || motion !== 'idle'}
+              className="rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-4 text-lg font-semibold text-white transition hover:-translate-y-0.5 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Interested
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={() => swipe('super-like')}
-            className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700 transition hover:-translate-y-0.5 hover:shadow-md"
+            disabled={isLoading || motion !== 'idle'}
+            className="mt-4 w-fit rounded-full border border-amber-300/60 bg-amber-400/10 px-5 py-2 text-sm font-semibold text-amber-200 transition hover:bg-amber-400/20 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Super Like
           </button>
+
+          <div className="mt-auto space-y-2 text-sm text-white/70">
+            <p>• Location: {currentProfile.location}</p>
+            <p>• Available for adoption</p>
+            <p>• Perfis restantes: {profiles.length}</p>
+            <p>• Likes: {stats.likes} | Super likes: {stats.superLikes} | Passes: {stats.passes}</p>
+          </div>
+
+          {pendingAction ? <p className="mt-4 text-sm font-semibold text-white/85">{pendingAction === 'pass' ? 'Passando...' : pendingAction === 'like' ? 'Curtindo...' : 'Super like...'}</p> : null}
+          {isLoading ? <p className="mt-2 text-sm text-white/70">Carregando perfis do Supabase...</p> : null}
+          {loadError ? <p className="mt-2 text-sm text-amber-200">{loadError}</p> : null}
+        </aside>
+      </div>
+
+      <div className="lg:hidden">
+        <article className="relative min-h-[calc(100dvh-11.5rem)] w-full overflow-hidden bg-slate-950">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute left-4 right-4 top-4 z-30 flex gap-2">
+              {[0, 1, 2].map((index) => (
+                <span
+                  key={index}
+                  className={`h-1.5 flex-1 rounded-full ${index <= activeProgressIndex ? 'bg-white' : 'bg-white/30'}`}
+                />
+              ))}
+            </div>
+
+            {nextProfile ? (
+              <div className="absolute inset-0 scale-[0.99] opacity-70 blur-[1px]">
+                <Image src={nextProfile.image} alt={nextProfile.name} fill className="object-cover" />
+                <div className="absolute inset-0 bg-black/45" />
+              </div>
+            ) : null}
+
+            <div className={`absolute inset-0 transition-all duration-200 ease-out ${motionClasses[motion]}`}>
+              <Image src={currentProfile.image} alt={currentProfile.name} fill priority className="object-cover" />
+            </div>
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-black/10" />
+
+            <div className="absolute bottom-40 left-4 right-4 z-20 text-white">
+              <div className="flex items-end justify-between">
+                <h2 className="text-5xl font-black leading-none">{currentProfile.name}</h2>
+                <span className="mb-1 rounded-full bg-blue-500 px-2 py-1 text-xs font-bold">ok</span>
+              </div>
+              <p className="mt-2 text-3xl text-white/85">{currentProfile.age}</p>
+              <div className="mt-4 flex flex-wrap gap-2">{currentProfile.traits.map(renderTrait)}</div>
+              <p className="mt-4 text-sm font-semibold text-white/85">{currentProfile.location}</p>
+              <p className="mt-1 text-xs text-white/70">Likes: {stats.likes} | Super likes: {stats.superLikes} | Passes: {stats.passes}</p>
+            </div>
+
+            <div className="absolute bottom-24 left-0 right-0 z-30 px-5">
+              <div className="mx-auto mb-3 grid w-fit place-items-center">
+                <button
+                  type="button"
+                  onClick={() => swipe('super-like')}
+                  disabled={isLoading || motion !== 'idle'}
+                  className="grid size-12 place-items-center rounded-full border border-amber-300/70 bg-black/35 text-xl text-amber-200 backdrop-blur disabled:opacity-60"
+                >
+                  ★
+                </button>
+              </div>
+
+              <div className="mx-auto flex max-w-sm items-center justify-between">
+                <button
+                  type="button"
+                  onClick={restart}
+                  className="grid size-14 place-items-center rounded-full border border-amber-400/70 bg-black/35 text-2xl text-amber-300 backdrop-blur"
+                >
+                  ↺
+                </button>
+                <button
+                  type="button"
+                  onClick={() => swipe('pass')}
+                  disabled={isLoading || motion !== 'idle'}
+                  className="grid size-16 place-items-center rounded-full border border-rose-400/70 bg-black/35 text-3xl text-rose-300 backdrop-blur disabled:opacity-60"
+                >
+                  ✕
+                </button>
+                <button
+                  type="button"
+                  onClick={() => swipe('like')}
+                  disabled={isLoading || motion !== 'idle'}
+                  className="grid size-16 place-items-center rounded-full border border-emerald-400/70 bg-black/35 text-3xl text-emerald-300 backdrop-blur disabled:opacity-60"
+                >
+                  ❤
+                </button>
+              </div>
+            </div>
+
+            <div className="absolute bottom-[6.25rem] left-4 right-4 z-30 text-center">
+              {pendingAction ? <p className="text-sm font-semibold text-white/90">{pendingAction === 'pass' ? 'Passando...' : pendingAction === 'like' ? 'Curtindo...' : 'Super like...'}</p> : null}
+              {isLoading ? <p className="mt-1 text-xs text-white/70">Carregando perfis do Supabase...</p> : null}
+              {loadError ? <p className="mt-1 text-xs text-amber-200">{loadError}</p> : null}
+            </div>
+          </div>
+        </article>
+
+        <div className="mx-auto mt-3 w-full px-4 text-center text-xs text-slate-600">
+          <p>Deslize para explorar mais perfis.</p>
         </div>
       </div>
     </section>

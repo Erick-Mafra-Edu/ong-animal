@@ -9,6 +9,23 @@ import { signInWithEmailAndPassword } from '@/lib/supabase/auth'
 import { isEmailVerificationEnabled } from '@/lib/supabase/auth-flags'
 import { useSupabaseClient } from '@/providers/supabase-provider'
 
+function isAuthDebugEnabled() {
+  return process.env.NEXT_PUBLIC_AUTH_DEBUG_LOGS === 'true'
+}
+
+function authDebugLog(step: string, payload?: Record<string, unknown>) {
+  if (!isAuthDebugEnabled()) return
+
+  const timestamp = new Date().toISOString()
+
+  if (payload) {
+    console.info(`[auth-login][${timestamp}] ${step}`, payload)
+    return
+  }
+
+  console.info(`[auth-login][${timestamp}] ${step}`)
+}
+
 export function LoginForm() {
   const router = useRouter()
   const supabase = useSupabaseClient()
@@ -17,6 +34,8 @@ export function LoginForm() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [emailValue, setEmailValue] = useState('')
   const [passwordValue, setPasswordValue] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   function normalizeAuthError(message: string) {
@@ -27,7 +46,7 @@ export function LoginForm() {
     }
 
     if (normalized.includes('invalid login credentials')) {
-      return 'E-mail ou senha inválidos. Confira os dados e tente novamente.'
+      return 'E-mail ou senha inválidos. Confira os dados exatamente como cadastrados (incluindo caracteres especiais, como *).'
     }
 
     if (normalized.includes('configure next_public_supabase_url')) {
@@ -49,25 +68,38 @@ export function LoginForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    authDebugLog('submit-start')
+
     const formData = new FormData(event.currentTarget)
     const email = String(formData.get('email') ?? '').trim()
     const password = String(formData.get('password') ?? '')
 
     setErrorMessage(null)
     setSuccessMessage(null)
+    setIsSubmitting(true)
+    authDebugLog('form-read', { email, passwordLength: password.length })
 
     if (!email || !password) {
       setErrorMessage('Preencha e-mail e senha para continuar.')
+      authDebugLog('validation-failed-empty-fields')
+      setIsSubmitting(false)
       return
     }
 
     if (!/^\S+@\S+\.\S+$/.test(email)) {
       setErrorMessage('Digite um e-mail válido para entrar.')
+      authDebugLog('validation-failed-invalid-email', { email })
+      setIsSubmitting(false)
       return
     }
 
     try {
+      authDebugLog('sign-in-request')
       const result = await signInWithEmailAndPassword(supabase, { email, password })
+      authDebugLog('sign-in-response', {
+        hasSession: Boolean(result.session),
+        userId: result.user?.id ?? null,
+      })
 
       if (!result.session) {
         setErrorMessage(
@@ -75,13 +107,21 @@ export function LoginForm() {
             ? 'Não foi possível iniciar a sessão. Verifique se o e-mail está confirmado.'
             : 'Não foi possível iniciar a sessão. Verifique suas credenciais e a configuração do Supabase.',
         )
+        authDebugLog('sign-in-no-session')
         return
       }
 
       setSuccessMessage('Login realizado com sucesso. Redirecionando para o swipe.')
+      authDebugLog('sign-in-success-redirect', { target: '/swipe' })
       startTransition(() => router.push('/swipe'))
     } catch (error) {
+      authDebugLog('sign-in-error', {
+        message: error instanceof Error ? error.message : 'Falha ao entrar',
+      })
       setErrorMessage(error instanceof Error ? normalizeAuthError(error.message) : 'Falha ao entrar')
+    } finally {
+      setIsSubmitting(false)
+      authDebugLog('submit-end')
     }
   }
 
@@ -123,21 +163,31 @@ export function LoginForm() {
 
         <label className="block">
           <span className="mb-2 block text-sm font-semibold text-slate-700">Senha</span>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            autoCapitalize="none"
-            spellCheck={false}
-            data-bwignore="true"
-            data-1p-ignore="true"
-            placeholder="Digite sua senha"
-            value={passwordValue}
-            onChange={(event) => setPasswordValue(event.target.value)}
-            aria-invalid={Boolean(errorMessage)}
-            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
-          />
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              autoCapitalize="none"
+              spellCheck={false}
+              data-bwignore="true"
+              data-1p-ignore="true"
+              placeholder="Digite sua senha"
+              value={passwordValue}
+              onChange={(event) => setPasswordValue(event.target.value)}
+              aria-invalid={Boolean(errorMessage)}
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 pr-24 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              {showPassword ? 'Ocultar' : 'Mostrar'}
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-slate-500">Dica: a senha diferencia maiúsculas/minúsculas e caracteres especiais.</p>
         </label>
 
         <div className="flex items-center justify-between gap-4 text-sm">
@@ -157,11 +207,17 @@ export function LoginForm() {
 
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isSubmitting || isPending}
           className="w-full rounded-2xl bg-slate-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isPending ? 'Entrando...' : 'Entrar agora'}
+          {isSubmitting || isPending ? 'Entrando...' : 'Entrar agora'}
         </button>
+
+        {isSubmitting ? (
+          <p role="status" aria-live="polite" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+            Enviando credenciais para autenticação...
+          </p>
+        ) : null}
 
         <button
           type="button"
