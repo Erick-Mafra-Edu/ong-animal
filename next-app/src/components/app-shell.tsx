@@ -41,9 +41,19 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
 
             <Link
-              href="/chat"
-              aria-current={pathname.startsWith('/chat') ? 'page' : undefined}
-              className={`inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold transition hover:-translate-y-0.5 hover:shadow-md ${pathname.startsWith('/chat') ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-800'}`}
+              href="/ong/dashboard"
+              aria-current={pathname.startsWith('/ong') ? 'page' : undefined}
+              className={`inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold transition hover:-translate-y-0.5 hover:shadow-md ${pathname.startsWith('/ong') ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-800'}`}
+            >
+              <span aria-hidden="true">🏢</span>
+              <span>Painel ONG</span>
+            </Link>
+
+            <button
+              type="button"
+              disabled
+              title="Chat em breve"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-500 transition"
             >
               <span aria-hidden="true">💬</span>
               <span>Chat</span>
@@ -61,7 +71,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200/80 bg-white/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-xl md:hidden">
-          <div className="mx-auto grid max-w-sm grid-cols-3 items-center text-center text-slate-600">
+          <div className="mx-auto grid max-w-sm grid-cols-4 items-center text-center text-slate-600">
             <Link
               href="/swipe"
               aria-current={isActiveRoute('/swipe') ? 'page' : undefined}
@@ -72,9 +82,19 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
 
             <Link
-              href="/chat"
-              aria-current={pathname.startsWith('/chat') ? 'page' : undefined}
-              className={`flex flex-col items-center gap-1 rounded-2xl px-3 py-2 text-xs font-semibold transition ${pathname.startsWith('/chat') ? 'text-emerald-600' : 'text-slate-500'}`}
+              href="/ong/dashboard"
+              aria-current={pathname.startsWith('/ong') ? 'page' : undefined}
+              className={`flex flex-col items-center gap-1 rounded-2xl px-3 py-2 text-xs font-semibold transition ${pathname.startsWith('/ong') ? 'text-emerald-600' : 'text-slate-500'}`}
+            >
+              <span className="text-2xl" aria-hidden="true">🏢</span>
+              <span>Painel</span>
+            </Link>
+
+            <button
+              type="button"
+              disabled
+              title="Chat em breve"
+              className="flex flex-col items-center gap-1 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-400 transition"
             >
               <span className="text-2xl" aria-hidden="true">💬</span>
               <span>Chat</span>
