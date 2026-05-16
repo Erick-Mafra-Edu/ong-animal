@@ -57,7 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <span aria-hidden="true">💬</span>
               <span>Chat</span>
-            </button>
+            </Link>
 
             <Link
               href="/login"
@@ -98,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <span className="text-2xl" aria-hidden="true">💬</span>
               <span>Chat</span>
-            </button>
+            </Link>
 
             <Link
               href="/login"
